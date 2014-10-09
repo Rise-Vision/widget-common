@@ -1010,7 +1010,7 @@ RiseVision.Common.Visualization = function() {
 
 RiseVision.Common.Visualization.prototype.getData = function(opts) {
   this.url = opts.url;
-  this.refreshInterval = opts.refreshInterval;
+  this.refreshInterval = opts.refreshInterval || 0;
   this.timeout = opts.timeout || 30;
   this.callback = opts.callback;
   this.params = opts.params;
@@ -1072,6 +1072,7 @@ RiseVision.Common.Visualization.prototype.onQueryExecuted = function(response) {
       console.log("Detailed message: " + response.getDetailedMessage());
       console.log("Reasons: " + response.getReasons());
       this.callback(null, this.params);
+      this.query.abort();
     }
     else {
       this.callback(response.getDataTable(), this.params);
