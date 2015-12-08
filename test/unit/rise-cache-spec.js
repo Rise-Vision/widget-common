@@ -47,6 +47,7 @@ describe("getFile", function() {
     var spy = sinon.spy(riseCache, "ping");
 
     riseCache.getFile("http://www.test.com/test.jpg", function(){});
+
     requests[0].respond(200);
 
     riseCache.getFile("http://www.test.com/test.jpg", function(){});
@@ -56,64 +57,6 @@ describe("getFile", function() {
     riseCache.ping.restore();
   });
 
-  it("should make a HEAD request", function() {
-    var spy = sinon.spy();
-
-    // Ping request
-    riseCache.ping(function(){});
-    requests[0].respond(200);
-
-    riseCache.getFile("http://www.test.com/test.jpg", spy);
-
-    expect(requests[1].method).to.equal("HEAD");
-  });
-
-  it("should make a GET request if the HEAD request fails", function() {
-    var spy = sinon.spy();
-
-    // Ping request
-    riseCache.ping(function(){});
-    requests[0].respond(200);
-
-    // Failed request
-    riseCache.getFile("http://www.test.com/test.jpg", spy);
-    requests[1].respond(404);
-
-    riseCache.getFile("http://www.test.com/test.jpg", spy);
-
-    expect(requests[2].method).to.equal("GET");
-  });
-
-  it("should execute callback providing the xhr request and an error if all requests fail", function () {
-    var spy = sinon.spy();
-
-    // Ping request
-    riseCache.ping(function(){});
-    requests[0].respond(200);
-
-    riseCache.getFile("http://www.test.com/test.jpg", spy);
-    requests[1].respond(400); // HEAD request
-    requests[2].respond(400); // GET request
-
-    expect(spy.args[0][0].xhr).to.deep.equal(requests[2]);
-    expect(spy.args[0][1].message).to.equal("The request failed with status code: 400");
-  });
-
-  it("should execute callback providing the xhr request and an error when third party file " +
-    "does not exist", function () {
-    var spy = sinon.spy();
-
-    // Ping request
-    riseCache.ping(function(){});
-    requests[0].respond(200);
-
-    riseCache.getFile("http://www.test.com/test.jpg", spy);
-    requests[1].respond(404);
-    requests[2].respond(0);
-
-    expect(spy.args[0][0].xhr).to.deep.equal(requests[2]);
-    expect(spy.args[0][1].message).to.equal("The request failed with status code: 0");
-  });
 });
 
 describe("getFile - cache not running", function () {
@@ -142,26 +85,24 @@ describe("getFile - cache not running", function () {
     clock.restore();
   });
 
-  it("should execute callback passing the xhr request and a correctly structured URL with no cachebuster", function() {
+  it("should execute callback passing a correctly structured URL with no cachebuster", function() {
     var spy = sinon.spy();
 
     riseCache.getFile("http://www.test.com/test.jpg", spy, true);
-    requests[1].respond(200);
 
-    expect(spy.args[0][0].xhr).to.deep.equal(requests[1]);
-    expect(spy.args[0][0].url).to.equal("http://www.test.com/test.jpg");
+    expect(spy.calledWith({xhr:null, url:"http://www.test.com/test.jpg"})).to.be.true;
   });
 
-  it("should execute callback passing the xhr request and a correctly structured URL with cachebuster", function() {
+  it("should execute callback passing a correctly structured URL with cachebuster", function() {
     var spy = sinon.spy();
 
     riseCache.getFile("http://www.test.com/test.jpg", spy);
-    requests[1].respond(200);
-    expect(spy.calledWith({xhr: requests[1], url: "http://www.test.com/test.jpg?cb=0"})).to.be.true;
+
+    expect(spy.calledWith({xhr:null, url:"http://www.test.com/test.jpg?cb=0"})).to.be.true;
 
     riseCache.getFile("http://www.test.com/test.jpg?test=123", spy);
-    requests[2].respond(200);
-    expect(spy.calledWith({xhr: requests[2], url: "http://www.test.com/test.jpg?test=123&cb=0"})).to.be.true;
+
+    expect(spy.calledWith({xhr:null, url:"http://www.test.com/test.jpg?test=123&cb=0"})).to.be.true;
   });
 });
 
@@ -213,6 +154,17 @@ describe("getFile - cache is running", function () {
 
     expect(spy.args[0][0].xhr).to.deep.equal(requests[1]);
     expect(spy.args[0][0].url).to.equal("http://localhost:9494/cb=0?url=" + urlEncoded);
+  });
+
+  it("should execute callback providing the xhr request and an error when request fails", function () {
+    var spy = sinon.spy();
+
+    riseCache.getFile("http://www.test.com/test.jpg", spy);
+
+    requests[1].respond(400);
+
+    expect(spy.args[0][0].xhr).to.deep.equal(requests[1]);
+    expect(spy.args[0][1].message).to.equal("The request failed with status code: 400");
   });
 });
 
