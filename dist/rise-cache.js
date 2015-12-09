@@ -49,51 +49,53 @@ RiseVision.Common.RiseCache = (function () {
     }
 
     function fileRequest(isCacheRunning) {
-      var url, str, separator;
+      var xhr = new XMLHttpRequest(),
+        url, str, separator, request;
 
       if (isCacheRunning) {
         // configure url with cachebuster or not
         url = (nocachebuster) ? BASE_CACHE_URL + "?url=" + encodeURIComponent(fileUrl) :
           BASE_CACHE_URL + "cb=" + new Date().getTime() + "?url=" + encodeURIComponent(fileUrl);
-      } else {
-        if (nocachebuster) {
-          url = fileUrl;
-        } else {
-          str = fileUrl.split("?");
-          separator = (str.length === 1) ? "?" : "&";
-          url = fileUrl + separator + "cb=" + new Date().getTime();
-        }
-      }
 
-      makeRequest("HEAD", url);
-    }
-
-    function makeRequest(method, url) {
-      var xhr = new XMLHttpRequest(),
+        // custom request object to provide in response
         request = {
           xhr: xhr,
           url: url
         };
 
-      xhr.open(method, url, true);
+        xhr.open("GET", url, true);
 
-      xhr.addEventListener("loadend", function () {
-        var status = xhr.status || 0;
+        xhr.addEventListener('loadend', function () {
+          var status = xhr.status || 0;
 
-        if (status >= 200 && status < 300) {
-          callback(request);
-        } else {
-          // Server may not support HEAD request. Fallback to a GET request.
-          if (method === "HEAD") {
-            makeRequest("GET", url);
-          }
-          else {
+          if (status === 0 || (status >= 200 && status < 300)) {
+            callback(request);
+          } else {
             callback(request, new Error("The request failed with status code: " + status));
           }
-        }
-      });
+        });
 
-      xhr.send();
+        xhr.send();
+
+      } else {
+
+        if (nocachebuster) {
+          url = fileUrl;
+        } else {
+          str = fileUrl.split("?");
+          separator = (str.length === 1) ? "?" : "&";
+
+          url = fileUrl + separator + "cb=" + new Date().getTime();
+        }
+
+        // custom request object to provide in response
+        request = {
+          xhr: null,
+          url: url
+        };
+
+        callback(request);
+      }
     }
 
     if (!_pingReceived) {
