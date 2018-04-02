@@ -82,7 +82,10 @@
   }));
 
   gulp.task("js-concat", ["js", "js-folder"], function (cb) {
-    return gulp.src("dist/**/*.js")
+    return gulp.src([
+        "node_modules/webfontloader/webfontloader.js",
+        "dist/**/*.js"
+      ])
       .pipe(concat("all.js"))
       .pipe(gulp.dest("dist"));
   });

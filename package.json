@@ -1,6 +1,6 @@
 {
   "name": "widget-common",
-  "version": "3.6.1",
+  "version": "3.6.5",
   "description": "Common functionality for Widgets not using Angular JS.",
   "main": "gulpfile.js",
   "scripts": {
@@ -40,5 +40,8 @@
   },
   "optionalDependencies": {
     "wct-local": "<2.0.16"
+  },
+  "dependencies": {
+    "webfontloader": "^1.6.28"
   }
 }
