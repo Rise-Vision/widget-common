@@ -1,4 +1,4 @@
-/* global WebFont */
+import WebFont from "components/webfontloader/webfontloader.js";
 
 var RiseVision = RiseVision || {};
 
