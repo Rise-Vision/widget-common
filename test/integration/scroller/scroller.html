@@ -24,6 +24,8 @@
   <script>
     var json = null,
       scroller = null,
+      secondary = null,
+      secondaryCtx = null,
       scrollerElem = document.querySelector("#scroller"),
       scrollerCtx = scrollerElem.getContext("2d");
 
@@ -48,6 +50,9 @@
 
         scrollerElem.addEventListener("ready", readyHandler);
         scroller.init(items);
+
+        secondary = document.querySelector("#secondary");
+        secondaryCtx = secondary.getContext("2d");
       });
 
       suite("Scroller initialization", function() {
@@ -68,10 +73,28 @@
         });
       });
 
+      suite("Secondary canvas initialization", function() {
+        test("should create a secondary canvas", function() {
+          assert.isNotNull(secondary);
+        });
+
+        test("should set the width", function() {
+          // Width of secondary canvas should be at least double that of the scroller.
+          assert.isAtLeast(secondary.width, scrollerElem.width * 2);
+        });
+
+        test("should set the height", function() {
+          assert.equal(secondary.height, 100);
+        });
+
+        test("should hide the canvas", function() {
+          assert.equal(secondary.style.display, "none");
+        });
+      });
 
       suite("Drawing", function() {
         suiteSetup(function() {
-          json = JSON.parse(scrollerCtx.json());
+          json = JSON.parse(secondaryCtx.json());
         });
 
         test("should draw text using proper font styling", function() {
@@ -89,7 +112,7 @@
         test("should vertically align text when drawing", function() {
           assert.equal(json[4].method, "translate", "translate");
           assert.equal(json[4].arguments[0], 0, "x-coordinate");
-          assert.equal(json[4].arguments[1], scrollerElem.height / 2, "y-coordinate");
+          assert.equal(json[4].arguments[1], secondary.height / 2, "y-coordinate");
         });
 
         test("should strip HTML from drawn text", function() {
@@ -102,7 +125,7 @@
 
         test("should draw separator", function() {
           assert.equal(json[11].method, "arc", "method");
-          assert.equal(json[11].arguments[1], scrollerElem.height / 2, "y");
+          assert.equal(json[11].arguments[1], secondary.height / 2, "y");
           assert.equal(json[11].arguments[2], items[1].size / 2, "radius");
           assert.equal(json[11].arguments[3], 0, "start angle");
           assert.equal(json[11].arguments[4], Math.round(2 * Math.PI * 1000) / 1000, "end angle");
@@ -112,24 +135,41 @@
       suite("Playback", function() {
         suiteSetup(function() {
           scroller.play();
+
+          json = JSON.parse(scrollerCtx.json());
+        });
+
+        suiteTeardown(function() {
+          document.body.removeChild(document.getElementById("secondary"));
         });
 
         test("should clear scroller before redrawing", function(done) {
           setTimeout(function() {
-            json = JSON.parse(scrollerCtx.json());
-
-            assert.equal(json[14].method, "clearRect", "clearRect");
-            assert.equal(json[14].arguments[0], 0, "x-coordinate");
-            assert.equal(json[14].arguments[1], 0, "y-coordinate");
-            assert.equal(json[14].arguments[2], scrollerElem.width, "width");
-            assert.equal(json[14].arguments[3], scrollerElem.height, "height");
+            assert.equal(json[0].method, "clearRect", "clearRect");
+            assert.equal(json[0].arguments[0], 0, "x-coordinate");
+            assert.equal(json[0].arguments[1], 0, "y-coordinate");
+            assert.equal(json[0].arguments[2], scrollerElem.width, "width");
+            assert.equal(json[0].arguments[3], scrollerElem.height, "height");
 
             done();
           }, 100);
         });
 
+        test("should copy text from secondary canvas to scroller", function() {
+          var item = null;
+
+          // Refresh JSON data.
+          json = JSON.parse(scrollerCtx.json());
+          json = json[json.length - 1];
+
+          assert.equal(json.method, "drawImage", "drawImage");
+          assert.isObject(json.arguments[0], "canvas");
+          assert.equal(Math.floor(json.arguments[1]), Math.floor(scrollerCtx.xpos), "x-coordinate");
+          assert.equal(json.arguments[2], 0, "y-coordinate");
+        });
+
         test("should update xpos during playback", function() {
-          assert.isAbove(scrollerCtx.xpos, 0);
+          assert.isBelow(scrollerCtx.xpos, 0);
         });
 
         test("should pause playback", function(done) {
@@ -167,36 +207,6 @@
         });
       });
 
-      suite("Refreshing", function() {
-        test("should refresh scroller with new data", function() {
-          var data = [{
-            "text": "What's your chance of an earthquake in 2016?",
-            "fontStyle": {
-              "align": "left",
-              "backcolor": "transparent",
-              "bold": true,
-              "customSize": "",
-              "font": {
-                "family": "verdana,geneva,sans-serif",
-                "type": "standard",
-                "url": ""
-              },
-              "forecolor": "#FF0000",
-              "italic": true,
-              "size": "36px",
-              "underline": false
-            }
-          }];
-
-          scroller.refresh(data);
-
-          json = JSON.parse(scrollerCtx.json());
-          var position = Object.keys(json).length - 8 + 5;
-
-          assert.equal(json[position].arguments[0], "What's your chance of an earthquake in 2016?");
-        });
-      });
-
       suite("Speed", function() {
         var responseHandler;
 
@@ -224,7 +234,7 @@
           // Scrolling should finish in about 6.6 seconds.
           setTimeout(function() {
             assert.isTrue(responded);
-            // document.body.removeChild(document.getElementById("secondary"));
+            document.body.removeChild(document.getElementById("secondary"));
 
             done();
           }, 7000);
@@ -247,7 +257,7 @@
           // Scrolling should finish in about 4.4 seconds.
           setTimeout(function() {
             assert.isTrue(responded);
-            // document.body.removeChild(document.getElementById("secondary"));
+            document.body.removeChild(document.getElementById("secondary"));
 
             done();
           }, 5000);
@@ -274,6 +284,103 @@
           }, 4000);
         });
 
+      });
+
+      suite("Refreshing", function() {
+        test("should refresh scroller with new data", function() {
+          var data = [{
+            "text": "What's your chance of an earthquake in 2016?",
+            "fontStyle": {
+              "align": "left",
+              "backcolor": "transparent",
+              "bold": true,
+              "customSize": "",
+              "font": {
+                "family": "verdana,geneva,sans-serif",
+                "type": "standard",
+                "url": ""
+              },
+              "forecolor": "#FF0000",
+              "italic": true,
+              "size": "36px",
+              "underline": false
+            }
+          }];
+
+          secondary = document.querySelector("#secondary");
+          secondaryCtx = secondary.getContext("2d");
+
+          secondaryCtx.clear();
+          scroller.refresh(data);
+
+          json = JSON.parse(secondaryCtx.json());
+
+          assert.equal(json[5].arguments[0], "What's your chance of an earthquake in 2016?");
+        });
+      });
+
+      suite("Oversized error", function() {
+        test("should fire an scroller-oversized-canvas error", function(done) {
+          var data = [{
+            "text": "What's your chance of an earthquake in 2016? " +
+              "What's your chance of an earthquake in 2016? " +
+              "What's your chance of an earthquake in 2016? " +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?" +
+              "What's your chance of an earthquake in 2016?",
+            "fontStyle": {
+              "align": "left",
+              "backcolor": "transparent",
+              "bold": true,
+              "customSize": "",
+              "font": {
+                "family": "verdana,geneva,sans-serif",
+                "type": "standard",
+                "url": ""
+              },
+              "forecolor": "#FF0000",
+              "italic": true,
+              "size": "36px",
+              "underline": false
+            }
+          }];
+
+          secondary = document.querySelector("#secondary");
+          secondaryCtx = secondary.getContext("2d");
+
+          secondaryCtx.clear();
+
+          listener = function( response ) {
+
+            scrollerElem.removeEventListener( "scroller-oversized-canvas", listener );
+            done();
+          };
+
+          scrollerElem.addEventListener( "scroller-oversized-canvas", listener );
+
+          scroller.refresh(data);
+
+        });
       });
 
     });
