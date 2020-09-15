@@ -9,13 +9,6 @@ jobs:
       - checkout
       - restore_cache:
           key: node-cache-{{ checksum "package.json" }}
-      - run: &NODEUPDATE
-          name: update_node
-          command: |
-            which node
-            sudo npm install -g n
-            sudo n 10.16
-            sudo rm -rf /usr/local/nvm
       - run: npm install
       - run: bower install
       - save_cache:
@@ -36,11 +29,7 @@ jobs:
           at: .
       - restore_cache:
           key: node-cache-{{ checksum "package.json" }}
-      - run: *NODEUPDATE
-      - run: |
-          which node
-          node --version
-          NODE_ENV=prod npm run test
+      - run: NODE_ENV=prod npm run test
 
   build:
     working_directory: ~/Rise-Vision/widget-common
@@ -51,7 +40,6 @@ jobs:
           at: .
       - restore_cache:
           key: node-cache-{{ checksum "package.json" }}
-      - run: *NODEUPDATE
       - run: |
           if [ "${CIRCLE_BRANCH}" == "master" ]; then
             NODE_ENV=prod npm run build
