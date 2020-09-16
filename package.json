@@ -4,7 +4,7 @@
   "description": "Common functionality for Widgets not using Angular JS.",
   "main": "gulpfile.js",
   "scripts": {
-    "test": "gulp test:unit",
+    "test": "gulp test",
     "build": "gulp build"
   },
   "repository": {
@@ -36,10 +36,10 @@
     "jshint-stylish": "^0.2.0",
     "run-sequence": "^0.3.2",
     "mocha": "^8.0.1",
-    "web-component-tester": "6.9.0",
-    "widget-tester": "git://github.com/Rise-Vision/widget-tester.git"
+    "web-component-tester": "5.0.0",
+    "widget-tester": "git://github.com/Rise-Vision/widget-tester.git#v1.10.0"
   },
   "optionalDependencies": {
-    "wct-local": "2.1.5"
+    "wct-local": "<2.0.16"
   }
 }
