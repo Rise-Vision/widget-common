@@ -67,7 +67,7 @@ describe("getting date object from player version string", function() {
 });
 
 describe("getting environment verifier params", function() {
-  it("returns object providing correct params without using parent", function() {
+  it("returns object providing values without using parent", function() {
     var utils = RiseVision.Common.Utilities;
 
     history.pushState({}, "", "?env=extension&viewerId=abc123");
@@ -78,7 +78,7 @@ describe("getting environment verifier params", function() {
     });
   });
 
-  it("returns object providing correct params using parent", function() {
+  it("returns object providing values using parent", function() {
     var utils = RiseVision.Common.Utilities;
 
     history.pushState({}, "", "?parent=http%3A%2F%2Fpreview.risevision.com%2F%3Fenv%3Dembed%26viewerId%3Ddef456");
@@ -86,6 +86,17 @@ describe("getting environment verifier params", function() {
     expect(utils.getEnvVerifierParams()).to.deep.equal({
       endpoint_type: "embed",
       viewer_id: "def456"
+    });
+  });
+
+  it("returns object with empty values when params not found", function() {
+    var utils = RiseVision.Common.Utilities;
+
+    history.pushState({}, "", "?param=123");
+
+    expect(utils.getEnvVerifierParams()).to.deep.equal({
+      endpoint_type: "",
+      viewer_id: ""
     });
   });
 });
