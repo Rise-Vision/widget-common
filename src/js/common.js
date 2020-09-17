@@ -185,10 +185,10 @@ RiseVision.Common.Utilities = (function() {
   /**
    * Get the query parameter from a query string
    */
-  function getQueryStringParameter(param, query) {
+  function getQueryStringParameter(param, url) {
     param = param.replace(/[[]]/g, "\\$&");
     var regex = new RegExp("[?&]" + param + "(=([^&#]*)|&|#|$)"),
-      results = regex.exec(query);
+      results = regex.exec(url);
     if (!results) { return null; }
     if (!results[2]) { return ""; }
     return decodeURIComponent(results[2].replace(/\+/g, " "));
