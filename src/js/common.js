@@ -179,25 +179,19 @@ RiseVision.Common.Utilities = (function() {
    * Get the current URI query param
    */
   function getQueryParameter(param) {
-    return getQueryStringParameter(param, window.location.search.substring(1));
+    return getQueryStringParameter(param, window.location.href);
   }
 
   /**
    * Get the query parameter from a query string
    */
   function getQueryStringParameter(param, query) {
-    var vars = query.split("&"),
-      pair;
-
-    for (var i = 0; i < vars.length; i++) {
-      pair = vars[i].split("=");
-
-      if (pair[0] == param) { // jshint ignore:line
-        return decodeURIComponent(pair[1]);
-      }
-    }
-
-    return "";
+    param = param.replace(/[[]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + param + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(query);
+    if (!results) { return null; }
+    if (!results[2]) { return ""; }
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
   }
 
   /**
@@ -217,6 +211,16 @@ RiseVision.Common.Utilities = (function() {
     } else {
       return;
     }
+  }
+
+  function getEnvVerifierParams() {
+    var parent = getQueryParameter("parent"),
+      env = getQueryParameter("env"),
+      viewerId = getQueryParameter("viewerId"),
+      endpoint_type = env ? env : (parent ? getQueryStringParameter("env", parent) : ""),
+      viewer_id = viewerId ? viewerId : (parent ? getQueryStringParameter("viewerId", parent) : "");
+
+    return {endpoint_type: endpoint_type, viewer_id: viewer_id};
   }
 
   function getRiseCacheErrorMessage(statusCode) {
@@ -307,6 +311,7 @@ RiseVision.Common.Utilities = (function() {
     unescapeHTML:             unescapeHTML,
     hasInternetConnection:    hasInternetConnection,
     isLegacy:                 isLegacy,
-    getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString
+    getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString,
+    getEnvVerifierParams:     getEnvVerifierParams
   };
 })();

@@ -8,7 +8,7 @@ describe("getting query parameters", function() {
 
     value = utils.getQueryParameter("param");
 
-    expect(value).to.equal("");
+    expect(value).to.be.null;
   });
 
   it("returns query parameter value", function() {
@@ -29,7 +29,7 @@ describe("getting query parameters from query string", function() {
 
     value = utils.getQueryStringParameter("param", "?param2=abc123");
 
-    expect(value).to.equal("");
+    expect(value).to.be.null;
   });
 
   it("returns query parameter value", function() {
@@ -63,6 +63,30 @@ describe("getting date object from player version string", function() {
     expect(value.getFullYear()).to.equal(2016);
     expect(value.getHours()).to.equal(0);
     expect(value.getMinutes()).to.equal(0);
+  });
+});
+
+describe("getting environment verifier params", function() {
+  it("returns object providing correct params without using parent", function() {
+    var utils = RiseVision.Common.Utilities;
+
+    history.pushState({}, "", "?env=extension&viewerId=abc123");
+
+    expect(utils.getEnvVerifierParams()).to.deep.equal({
+      endpoint_type: "extension",
+      viewer_id: "abc123"
+    });
+  });
+
+  it("returns object providing correct params using parent", function() {
+    var utils = RiseVision.Common.Utilities;
+
+    history.pushState({}, "", "?parent=http%3A%2F%2Fpreview.risevision.com%2F%3Fenv%3Dembed%26viewerId%3Ddef456");
+
+    expect(utils.getEnvVerifierParams()).to.deep.equal({
+      endpoint_type: "embed",
+      viewer_id: "def456"
+    });
   });
 });
 
