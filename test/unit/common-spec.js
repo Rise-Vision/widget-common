@@ -66,37 +66,52 @@ describe("getting date object from player version string", function() {
   });
 });
 
-describe("getting environment verifier params", function() {
+describe("getting viewer params", function() {
   it("returns object providing values without using parent", function() {
     var utils = RiseVision.Common.Utilities;
 
-    history.pushState({}, "", "?env=extension&viewerId=abc123");
+    history.pushState({}, "", "?type=sharedschedule&env=extension&viewerId=abc123");
 
-    expect(utils.getEnvVerifierParams()).to.deep.equal({
-      env: "extension",
-      viewer_id: "abc123"
+    expect(utils.getViewerParams()).to.deep.equal({
+      viewer_env: "extension",
+      viewer_id: "abc123",
+      viewer_type: "sharedschedule"
     });
   });
 
   it("returns object providing values using parent", function() {
     var utils = RiseVision.Common.Utilities;
 
-    history.pushState({}, "", "?parent=http%3A%2F%2Fpreview.risevision.com%2F%3Fenv%3Dembed%26viewerId%3Ddef456");
+    history.pushState({}, "", "?parent=http%3A%2F%2Fpreview.risevision.com%2F%3Ftype%3Dsharedschedule%26env%3Dembed%26viewerId%3Ddef456");
 
-    expect(utils.getEnvVerifierParams()).to.deep.equal({
-      env: "embed",
-      viewer_id: "def456"
+    expect(utils.getViewerParams()).to.deep.equal({
+      viewer_env: "embed",
+      viewer_id: "def456",
+      viewer_type: "sharedschedule"
     });
   });
 
-  it("returns object with empty values when params not found", function() {
+  it("returns object with null values when params not found in parent", function() {
+    var utils = RiseVision.Common.Utilities;
+
+    history.pushState({}, "", "?parent=http%3A%2F%2Fpreview.risevision.com%2F%3Fparam=123");
+
+    expect(utils.getViewerParams()).to.deep.equal({
+      viewer_env: null,
+      viewer_id: null,
+      viewer_type: null
+    });
+  });
+
+  it("returns object with empty values when params not found including no parent", function() {
     var utils = RiseVision.Common.Utilities;
 
     history.pushState({}, "", "?param=123");
 
-    expect(utils.getEnvVerifierParams()).to.deep.equal({
-      env: "",
-      viewer_id: ""
+    expect(utils.getViewerParams()).to.deep.equal({
+      viewer_env: "",
+      viewer_id: "",
+      viewer_type: ""
     });
   });
 });
