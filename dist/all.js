@@ -220,7 +220,7 @@ RiseVision.Common.Utilities = (function() {
       endpoint_type = env ? env : (parent ? getQueryStringParameter("env", parent) : ""),
       viewer_id = viewerId ? viewerId : (parent ? getQueryStringParameter("viewerId", parent) : "");
 
-    return {endpoint_type: endpoint_type, viewer_id: viewer_id};
+    return {env: endpoint_type, viewer_id: viewer_id};
   }
 
   function getRiseCacheErrorMessage(statusCode) {
@@ -1043,7 +1043,7 @@ RiseVision.Common.LoggerUtils = (function() {
       if (presentation_type ==="sharedschedule") {
         json.presentation_type = presentation_type;
         json.schedule_id = schedule_id;
-        json.endpoint_type = endpoint_type;
+        json.env = endpoint_type;
       }
 
       if (version) {

@@ -73,7 +73,7 @@ describe("getting environment verifier params", function() {
     history.pushState({}, "", "?env=extension&viewerId=abc123");
 
     expect(utils.getEnvVerifierParams()).to.deep.equal({
-      endpoint_type: "extension",
+      env: "extension",
       viewer_id: "abc123"
     });
   });
@@ -84,7 +84,7 @@ describe("getting environment verifier params", function() {
     history.pushState({}, "", "?parent=http%3A%2F%2Fpreview.risevision.com%2F%3Fenv%3Dembed%26viewerId%3Ddef456");
 
     expect(utils.getEnvVerifierParams()).to.deep.equal({
-      endpoint_type: "embed",
+      env: "embed",
       viewer_id: "def456"
     });
   });
@@ -95,7 +95,7 @@ describe("getting environment verifier params", function() {
     history.pushState({}, "", "?param=123");
 
     expect(utils.getEnvVerifierParams()).to.deep.equal({
-      endpoint_type: "",
+      env: "",
       viewer_id: ""
     });
   });

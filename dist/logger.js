@@ -45,7 +45,7 @@ RiseVision.Common.LoggerUtils = (function() {
       if (presentation_type ==="sharedschedule") {
         json.presentation_type = presentation_type;
         json.schedule_id = schedule_id;
-        json.endpoint_type = endpoint_type;
+        json.env = endpoint_type;
       }
 
       if (version) {
