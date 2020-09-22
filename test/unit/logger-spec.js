@@ -5,7 +5,8 @@ var utils = RiseVision.Common.LoggerUtils,
     "event": "load",
     "display_id": "abc123",
     "company_id": "def456",
-    "event_details": "Widget loaded"
+    "event_details": "Widget loaded",
+    "viewer_id": "ghi789"
   };
 
 function getDateSuffix() {
@@ -76,12 +77,18 @@ describe("RiseVision.Common.LoggerUtils", function() {
         revisedData;
 
       revisedParams.version = "0.0.0";
-      
+
       revisedData = utils.getInsertData(revisedParams);
 
       expect(revisedData.rows[0].json.version).to.exist;
       expect(revisedData.rows[0].json.version).to.be.a("string");
       expect(revisedData.rows[0].json.version).to.equal(revisedParams.version);
+    });
+
+    it("should return an object containing viewer_id property", function() {
+      expect(data.rows[0].json.viewer_id).to.exist;
+      expect(data.rows[0].json.viewer_id).to.be.a("string");
+      expect(data.rows[0].json.viewer_id).to.equal("ghi789");
     });
 
   });
@@ -155,11 +162,12 @@ describe("RiseVision.Common.LoggerUtils", function() {
         "event": "load",
         "event_details": "Widget loaded",
         "company_id": "abc123",
-        "display_id": "def456"
+        "display_id": "def456",
+        "viewer_id": ""
       });
     });
   });
-  
+
   describe("setVersion", function () {
     var logSpy,
       tableName = "video_events";
@@ -185,7 +193,8 @@ describe("RiseVision.Common.LoggerUtils", function() {
         "event_details": "Widget loaded",
         "company_id": "abc123",
         "display_id": "def456",
-        "version": "0.0.0"
+        "version": "0.0.0",
+        "viewer_id": ""
       });
     });
   });
@@ -223,7 +232,8 @@ describe("RiseVision.Common.LoggerUtils", function() {
         "file_format": "webm",
         "display_id": defined.display_id,
         "company_id": defined.company_id,
-        "version": defined.version
+        "version": defined.version,
+        "viewer_id": ""
       });
     });
 
@@ -241,7 +251,8 @@ describe("RiseVision.Common.LoggerUtils", function() {
         "file_format": "webm",
         "display_id": defined.display_id,
         "company_id": defined.company_id,
-        "version": defined.version
+        "version": defined.version,
+        "viewer_id": ""
       });
     });
 
@@ -258,7 +269,8 @@ describe("RiseVision.Common.LoggerUtils", function() {
         "event_details": test.event_details,
         "display_id": defined.display_id,
         "company_id": defined.company_id,
-        "version": defined.version
+        "version": defined.version,
+        "viewer_id": ""
       });
     });
 
@@ -279,7 +291,8 @@ describe("RiseVision.Common.LoggerUtils", function() {
         "file_format": test.file_format,
         "display_id": defined.display_id,
         "company_id": defined.company_id,
-        "version": defined.version
+        "version": defined.version,
+        "viewer_id": ""
       });
     });
 
@@ -382,7 +395,7 @@ describe("RiseVision.Common.Logger", function () {
       expect(requests[1].requestBody).to.contain('{"kind":"bigquery#tableDataInsertAllRequest","skipInvalidRows":false,' +
         '"ignoreUnknownValues":false,"templateSuffix":"' + getDateSuffix() + '","rows":[{"insertId":');
       expect(requests[1].requestBody).to.contain('"json":{"event":"' + params.event + '","display_id":"' +
-        params.display_id + '","company_id":"' + params.company_id + '","event_details":"' + params.event_details + '","ts":');
+        params.display_id + '","company_id":"' + params.company_id + '","event_details":"' + params.event_details + '","viewer_id":"' + params.viewer_id + '","ts":');
     });
 
     it("should not make a request if table name is empty", function() {

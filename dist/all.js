@@ -179,25 +179,19 @@ RiseVision.Common.Utilities = (function() {
    * Get the current URI query param
    */
   function getQueryParameter(param) {
-    return getQueryStringParameter(param, window.location.search.substring(1));
+    return getQueryStringParameter(param, window.location.href);
   }
 
   /**
    * Get the query parameter from a query string
    */
-  function getQueryStringParameter(param, query) {
-    var vars = query.split("&"),
-      pair;
-
-    for (var i = 0; i < vars.length; i++) {
-      pair = vars[i].split("=");
-
-      if (pair[0] == param) { // jshint ignore:line
-        return decodeURIComponent(pair[1]);
-      }
-    }
-
-    return "";
+  function getQueryStringParameter(param, url) {
+    param = param.replace(/[[]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + param + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+    if (!results) { return null; }
+    if (!results[2]) { return ""; }
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
   }
 
   /**
@@ -217,6 +211,16 @@ RiseVision.Common.Utilities = (function() {
     } else {
       return;
     }
+  }
+
+  function getEnvVerifierParams() {
+    var parent = getQueryParameter("parent"),
+      env = getQueryParameter("env"),
+      viewerId = getQueryParameter("viewerId"),
+      endpoint_type = env ? env : (parent ? getQueryStringParameter("env", parent) : ""),
+      viewer_id = viewerId ? viewerId : (parent ? getQueryStringParameter("viewerId", parent) : "");
+
+    return {env: endpoint_type, viewer_id: viewer_id};
   }
 
   function getRiseCacheErrorMessage(statusCode) {
@@ -307,7 +311,8 @@ RiseVision.Common.Utilities = (function() {
     unescapeHTML:             unescapeHTML,
     hasInternetConnection:    hasInternetConnection,
     isLegacy:                 isLegacy,
-    getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString
+    getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString,
+    getEnvVerifierParams:     getEnvVerifierParams
   };
 })();
 
@@ -1001,7 +1006,8 @@ RiseVision.Common.LoggerUtils = (function() {
 
    var displayId = "",
      companyId = "",
-     version = null;
+     version = null,
+     utils = RiseVision.Common.Utilities;
 
   /*
    *  Private Methods
@@ -1021,17 +1027,23 @@ RiseVision.Common.LoggerUtils = (function() {
 
       json.company_id = companyId;
       json.display_id = displayId;
-      
-      if(location.href) {
-        var parent = getParameterByName("parent", location.href); // legacy presentations
-        var type = getParameterByName("type", location.href); // templates
-        var presentation_type = type ? type : (parent ? getParameterByName("type", parent) : "");
-        var schedule_id = parent ? getParameterByName("id", parent) : "";
-        if (presentation_type ==="sharedschedule") {
-          json.presentation_type = presentation_type;
-          json.schedule_id = schedule_id;
-          json.unique_id = getUniqueId();
-        }
+
+      var parent = utils.getQueryParameter("parent"); // legacy presentations
+      var type = utils.getQueryParameter("type"); // templates
+      var env = utils.getQueryParameter("env"); // endpoint
+      var viewerId = utils.getQueryParameter("viewerId");
+
+      var presentation_type = type ? type : (parent ? utils.getQueryStringParameter("type", parent) : "");
+      var endpoint_type = env ? env : (parent ? utils.getQueryStringParameter("env", parent) : "");
+      var viewer_id = viewerId ? viewerId : (parent ? utils.getQueryStringParameter("viewerId", parent) : "");
+      var schedule_id = parent ? utils.getQueryStringParameter("id", parent) : "";
+
+      json.viewer_id = viewer_id;
+
+      if (presentation_type ==="sharedschedule") {
+        json.presentation_type = presentation_type;
+        json.schedule_id = schedule_id;
+        json.env = endpoint_type;
       }
 
       if (version) {
@@ -1043,41 +1055,6 @@ RiseVision.Common.LoggerUtils = (function() {
     else {
       cb(json);
     }
-  }
-  
-  function getUniqueId() {
-    var uniqueId = window.localStorage.uniqueId || "";
-    if (uniqueId === "") {
-      uniqueId = generateUUID();
-      window.localStorage.setItem("uniqueId", uniqueId);
-    }
-    return uniqueId;
-  }
-    
-  function generateUUID() { 
-    var d = new Date().getTime();// Timestamp
-    var d2 = (performance && performance.now && (performance.now()*1000)) || 0; //Time in microseconds since page-load or 0 if unsupported
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16; //random number between 0 and 16
-      if(d > 0){ // Use timestamp until depleted
-        r = (d + r)%16 | 0; // jshint ignore:line
-        d = Math.floor(d/16);
-      } else { // Use microseconds since page-load if supported
-        r = (d2 + r)%16 | 0; // jshint ignore:line
-        d2 = Math.floor(d2/16);
-      }
-      return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16); // jshint ignore:line
-    });
-  }
-  
-  function getParameterByName(name, url) {
-    if (!url) { url = window.location.href; }
-      name = name.replace(/[[]]/g, "\\$&");
-      var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-        results = regex.exec(url);
-    if (!results) { return null; }
-    if (!results[2]) { return ""; }
-    return decodeURIComponent(results[2].replace(/\+/g, " "));
   }
 
   // Get suffix for BQ table name.
@@ -1235,7 +1212,7 @@ RiseVision.Common.Logger = (function(utils) {
       return;
     }
 
-    // don't log if display id is invalid or preview/local (do log in case of shared schedule) 
+    // don't log if display id is invalid or preview/local (do log in case of shared schedule)
     if ((!params.presentation_type || params.presentation_type !=="sharedschedule") && (!params.display_id || params.display_id === "preview" || params.display_id === "display_id" ||
       params.display_id === "displayId")) {
       return;
