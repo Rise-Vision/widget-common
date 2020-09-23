@@ -213,14 +213,16 @@ RiseVision.Common.Utilities = (function() {
     }
   }
 
-  function getEnvVerifierParams() {
+  function getViewerParams() {
     var parent = getQueryParameter("parent"),
+      type = getQueryParameter("type"),
       env = getQueryParameter("env"),
       viewerId = getQueryParameter("viewerId"),
-      endpoint_type = env ? env : (parent ? getQueryStringParameter("env", parent) : ""),
+      viewerType = type ? type : (parent ? getQueryStringParameter("type", parent) : ""),
+      viewerEnv = env ? env : (parent ? getQueryStringParameter("env", parent) : ""),
       viewer_id = viewerId ? viewerId : (parent ? getQueryStringParameter("viewerId", parent) : "");
 
-    return {env: endpoint_type, viewer_id: viewer_id};
+    return {viewer_env: viewerEnv, viewer_id: viewer_id, viewer_type: viewerType};
   }
 
   function getRiseCacheErrorMessage(statusCode) {
@@ -312,6 +314,6 @@ RiseVision.Common.Utilities = (function() {
     hasInternetConnection:    hasInternetConnection,
     isLegacy:                 isLegacy,
     getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString,
-    getEnvVerifierParams:     getEnvVerifierParams
+    getViewerParams:          getViewerParams
   };
 })();
