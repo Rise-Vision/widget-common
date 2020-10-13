@@ -6,7 +6,6 @@
 
   <link rel="stylesheet" href="/src/css/message.css">
 
-  <script src="../../../components/webcomponentsjs/webcomponents-lite.js"></script>
   <script src="../../../components/web-component-tester/browser.js"></script>
   <script src="../../../components/jquery/dist/jquery.js"></script>
 
@@ -60,7 +59,7 @@
     });
 
     suite( "request data", function() {
-      var riseGoogleSheet, callback;
+      var riseGoogleSheet, callback, clock;
 
       suiteSetup( function() {
         sinon.stub( riseData, "getItem", function( key, cb ) {
@@ -73,26 +72,31 @@
       } );
 
       setup(function () {
+        clock = sinon.useFakeTimers();
         callback = sinon.spy();
         riseGoogleSheet = new RiseVision.Common.RiseGoogleSheet(sheetsInitObj, riseData, callback);
       });
 
-      test( "should return an Array of cell objects when server/API request responds successfully", function( done ) {
+      teardown(function () {
+        clock.restore();
+      });
+
+      test( "should return an Array of cell objects when server/API request responds successfully", function() {
         server.respondWith( [ 200, {}, JSON.stringify( sheetDataClone ) ] );
         riseGoogleSheet.go();
+
+        // fast forward the maximum delay of request when no cache available
+        clock.tick( 60 * 1000 );
+
         server.respond();
 
-        setTimeout(function () {
-          assert.equal( callback.args[0][0], "response" );
-          assert.property( callback.args[0][1], "results" );
-          assert.isArray( callback.args[0][1].results );
-          assert.deepEqual( callback.args[0][1].results, sheetDataClone.values );
-
-          done();
-        }, 200);
+        assert.equal( callback.args[0][0], "response" );
+        assert.property( callback.args[0][1], "results" );
+        assert.isArray( callback.args[0][1].results );
+        assert.deepEqual( callback.args[0][1].results, sheetDataClone.values );
       } );
 
-      test( "should return data with columns appended to data", function( done ) {
+      test( "should return data with columns appended to data", function() {
         var data =
           {
             "majorDimension": "ROWS",
@@ -106,38 +110,38 @@
 
         server.respondWith( [ 200, {}, JSON.stringify( data ) ] );
         riseGoogleSheet.go();
+
+        // fast forward the maximum delay of request when no cache available
+        clock.tick( 60 * 1000 );
+
         server.respond();
 
-        setTimeout(function () {
-          assert.deepEqual( callback.args[0][1].results, [
-            [ "Apple", "", "" ],
-            [ "Milk", "Drink", "3.99" ],
-            [ "Crackers", "Snack", "" ]
-          ] );
-
-          done();
-        }, 200);
+        assert.deepEqual( callback.args[0][1].results, [
+          [ "Apple", "", "" ],
+          [ "Milk", "Drink", "3.99" ],
+          [ "Crackers", "Snack", "" ]
+        ] );
       } );
 
-      test( "should return error when server/API request responds unsuccessful", function( done ) {
+      test( "should return error when server/API request responds unsuccessful", function() {
         server.respondWith( [ 400, {}, "" ] );
         riseGoogleSheet.go();
+
+        // fast forward the maximum delay of request when no cache available
+        clock.tick( 60 * 1000 );
+
         server.respond();
 
-        setTimeout(function () {
-          assert.equal( callback.args[0][0], "error" );
-          assert.property( callback.args[0][1], "status" );
-          assert.property( callback.args[0][1], "statusText" );
-          assert.equal( callback.args[0][1].status, 400 );
-          assert.isString( callback.args[0][1].statusText );
-
-          done();
-        }, 200);
+        assert.equal( callback.args[0][0], "error" );
+        assert.property( callback.args[0][1], "status" );
+        assert.property( callback.args[0][1], "statusText" );
+        assert.equal( callback.args[0][1].status, 400 );
+        assert.isString( callback.args[0][1].statusText );
       } );
 
     } );
 
-    suite( "offline cached data", function() {
+    suite( "cached data", function() {
       var riseGoogleSheet, callback;
 
       suiteSetup( function() {
@@ -152,24 +156,36 @@
 
       setup(function () {
         callback = sinon.spy();
+        clock = sinon.useFakeTimers();
         riseGoogleSheet = new RiseVision.Common.RiseGoogleSheet(sheetsInitObj, riseData, callback);
       });
 
-      test( "should return cached Array of values when making offline request", function( done ) {
-        // data will get cached
-        server.respondWith( [ 200, {}, JSON.stringify( sheetDataClone ) ] );
+      teardown(function () {
+        clock.restore();
+      });
+
+      test( "should return cached Array of values", function() {
         riseGoogleSheet.go();
+
+        assert.deepEqual( callback.args[0][1].results, sheetDataClone.values );
+      } );
+
+      test( "should return cached Array of values and error upon refresh and request fails", function() {
+        riseGoogleSheet.go();
+
+        server.respondWith( [ 400, {}, "" ] );
+
+        // fast forward refresh duration and max delay
+        clock.tick( (180 * 1000) + (60 * 60 * 1000) );
+
         server.respond();
 
-        server.respondWith( [ 0, {}, "" ] );
-        riseGoogleSheet.go();
-        server.respond();
-
-        setTimeout(function () {
-          assert.deepEqual( callback.args[0][1].results, sheetDataClone.values );
-
-          done();
-        }, 1000);
+        assert.deepEqual( callback.args[1][1].results, sheetDataClone.values );
+        assert.equal( callback.args[1][0], "error" );
+        assert.property( callback.args[1][1], "status" );
+        assert.property( callback.args[1][1], "statusText" );
+        assert.equal( callback.args[1][1].status, 400 );
+        assert.isString( callback.args[1][1].statusText );
       } );
     } );
 

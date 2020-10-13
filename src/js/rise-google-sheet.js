@@ -132,20 +132,32 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
     _startTimer();
   }
 
-  function _makeRequest() {
+  function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min);
+  }
+
+  function _makeRequest( maxDelayInSeconds ) {
     var url = _getUrl(),
-      params = _getQueryParams();
+      params = _getQueryParams(),
+      randomizedDelay = getRandomInt( 0, maxDelayInSeconds ) * 1000;
 
     // set flag to prevent further requests in case go() function is called before prior request responds
     _requestPending = true;
 
-    $.getJSON(url, params)
-      .done(function( json ) {
-        _handleSheetResponse( json );
-      })
-      .fail(function( xhr ) {
-        _handleSheetError( xhr );
-      });
+    // Delay executing a request by randomized value within 'maxDelayInSeconds' range.
+    // https://github.com/Rise-Vision/widget-google-spreadsheet/issues/321
+
+    setTimeout( function() {
+      $.getJSON(url, params)
+        .done(function( json ) {
+          _handleSheetResponse( json );
+        })
+        .fail(function( xhr ) {
+          _handleSheetError( xhr );
+        });
+    }, randomizedDelay );
   }
 
   function _getDataKey() {
@@ -168,7 +180,7 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
     if ( _refreshPending || !cachedData ) {
       // refresh timer completed or there is no cached data available, make the request
       _refreshPending = false;
-      _makeRequest();
+      _makeRequest( !cachedData ? 60 : 180 );
     } else {
       if ( _initialGo ) {
         _initialGo = false;
@@ -191,14 +203,14 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
 
           if ( diff >= refreshVal ) {
             // more time has gone by than the assigned refresh value, make the request
-            _makeRequest();
+            _makeRequest( 180 );
             return;
           } else {
             // start a refresh timer with the remaining refresh time left as the interval
             _clearTimer();
 
             _timer = setTimeout( function () {
-              _makeRequest();
+              _makeRequest( 180 );
             }, ( refreshVal - diff ) * 60000 );
           }
         }
