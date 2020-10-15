@@ -334,6 +334,33 @@ describe("RiseVision.Common.LoggerUtils", function() {
 
   });
 
+  describe("getting query parameters", function() {
+    it("returns null if no query parameter found", function() {
+      history.pushState({}, "", "?test=abc123");
+      expect(RiseVision.Common.LoggerUtils.getQueryParameter("param")).to.be.null;
+    });
+
+    it("returns query parameter value", function() {
+      history.pushState({}, "", "?param=abc123");
+      expect(RiseVision.Common.LoggerUtils.getQueryParameter("param")).to.equal("abc123");
+    });
+  });
+
+  describe("getting query parameters from query string", function() {
+    it("returns null if no query parameter found", function() {
+      expect(RiseVision.Common.LoggerUtils.getQueryStringParameter("param", "?param2=abc123")).to.be.null;
+    });
+
+    it("returns query parameter value", function() {
+      var utils = RiseVision.Common.Utilities,
+        value;
+
+      value = utils.getQueryParameter("param", "?param=abc123");
+
+      expect(value).to.equal("abc123");
+    });
+  });
+
 });
 
 describe("RiseVision.Common.Logger", function () {

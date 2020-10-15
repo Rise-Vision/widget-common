@@ -1008,8 +1008,7 @@ RiseVision.Common.LoggerUtils = (function() {
 
    var displayId = "",
      companyId = "",
-     version = null,
-     utils = RiseVision.Common.Utilities;
+     version = null;
 
   /*
    *  Private Methods
@@ -1030,15 +1029,15 @@ RiseVision.Common.LoggerUtils = (function() {
       json.company_id = companyId;
       json.display_id = displayId;
 
-      var parent = utils.getQueryParameter("parent"); // legacy presentations
-      var type = utils.getQueryParameter("type"); // templates
-      var env = utils.getQueryParameter("env"); // endpoint
-      var viewerId = utils.getQueryParameter("viewerId");
+      var parent = getQueryParameter("parent"); // legacy presentations
+      var type = getQueryParameter("type"); // templates
+      var env = getQueryParameter("env"); // endpoint
+      var viewerId = getQueryParameter("viewerId");
 
-      var presentation_type = type ? type : (parent ? utils.getQueryStringParameter("type", parent) : "");
-      var endpoint_type = env ? env : (parent ? utils.getQueryStringParameter("env", parent) : "");
-      var viewer_id = viewerId ? viewerId : (parent ? utils.getQueryStringParameter("viewerId", parent) : "");
-      var schedule_id = parent ? utils.getQueryStringParameter("id", parent) : "";
+      var presentation_type = type ? type : (parent ? getQueryStringParameter("type", parent) : "");
+      var endpoint_type = env ? env : (parent ? getQueryStringParameter("env", parent) : "");
+      var viewer_id = viewerId ? viewerId : (parent ? getQueryStringParameter("viewerId", parent) : "");
+      var schedule_id = parent ? getQueryStringParameter("id", parent) : "";
 
       json.viewer_id = viewer_id;
 
@@ -1057,6 +1056,25 @@ RiseVision.Common.LoggerUtils = (function() {
     else {
       cb(json);
     }
+  }
+
+  /**
+   * Get the current URI query param
+   */
+  function getQueryParameter(param) {
+    return getQueryStringParameter(param, window.location.href);
+  }
+
+  /**
+   * Get the query parameter from a query string
+   */
+  function getQueryStringParameter(param, url) {
+    param = param.replace(/[[]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + param + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+    if (!results) { return null; }
+    if (!results[2]) { return ""; }
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
   }
 
   // Get suffix for BQ table name.
@@ -1155,6 +1173,8 @@ RiseVision.Common.LoggerUtils = (function() {
   return {
     "getInsertData": getInsertData,
     "getFileFormat": getFileFormat,
+    "getQueryParameter": getQueryParameter,
+    "getQueryStringParameter": getQueryStringParameter,
     "logEvent": logEvent,
     "logEventToPlayer": logEventToPlayer,
     "setIds": setIds,
@@ -1958,20 +1978,32 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
     _startTimer();
   }
 
-  function _makeRequest() {
+  function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min);
+  }
+
+  function _makeRequest( maxDelayInSeconds ) {
     var url = _getUrl(),
-      params = _getQueryParams();
+      params = _getQueryParams(),
+      randomizedDelay = getRandomInt( 0, maxDelayInSeconds ) * 1000;
 
     // set flag to prevent further requests in case go() function is called before prior request responds
     _requestPending = true;
 
-    $.getJSON(url, params)
-      .done(function( json ) {
-        _handleSheetResponse( json );
-      })
-      .fail(function( xhr ) {
-        _handleSheetError( xhr );
-      });
+    // Delay executing a request by randomized value within 'maxDelayInSeconds' range.
+    // https://github.com/Rise-Vision/widget-google-spreadsheet/issues/321
+
+    setTimeout( function() {
+      $.getJSON(url, params)
+        .done(function( json ) {
+          _handleSheetResponse( json );
+        })
+        .fail(function( xhr ) {
+          _handleSheetError( xhr );
+        });
+    }, randomizedDelay );
   }
 
   function _getDataKey() {
@@ -1994,7 +2026,7 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
     if ( _refreshPending || !cachedData ) {
       // refresh timer completed or there is no cached data available, make the request
       _refreshPending = false;
-      _makeRequest();
+      _makeRequest( !cachedData ? 60 : 180 );
     } else {
       if ( _initialGo ) {
         _initialGo = false;
@@ -2017,14 +2049,14 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
 
           if ( diff >= refreshVal ) {
             // more time has gone by than the assigned refresh value, make the request
-            _makeRequest();
+            _makeRequest( 180 );
             return;
           } else {
             // start a refresh timer with the remaining refresh time left as the interval
             _clearTimer();
 
             _timer = setTimeout( function () {
-              _makeRequest();
+              _makeRequest( 180 );
             }, ( refreshVal - diff ) * 60000 );
           }
         }

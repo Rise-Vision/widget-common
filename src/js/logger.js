@@ -8,8 +8,7 @@ RiseVision.Common.LoggerUtils = (function() {
 
    var displayId = "",
      companyId = "",
-     version = null,
-     utils = RiseVision.Common.Utilities;
+     version = null;
 
   /*
    *  Private Methods
@@ -30,15 +29,15 @@ RiseVision.Common.LoggerUtils = (function() {
       json.company_id = companyId;
       json.display_id = displayId;
 
-      var parent = utils.getQueryParameter("parent"); // legacy presentations
-      var type = utils.getQueryParameter("type"); // templates
-      var env = utils.getQueryParameter("env"); // endpoint
-      var viewerId = utils.getQueryParameter("viewerId");
+      var parent = getQueryParameter("parent"); // legacy presentations
+      var type = getQueryParameter("type"); // templates
+      var env = getQueryParameter("env"); // endpoint
+      var viewerId = getQueryParameter("viewerId");
 
-      var presentation_type = type ? type : (parent ? utils.getQueryStringParameter("type", parent) : "");
-      var endpoint_type = env ? env : (parent ? utils.getQueryStringParameter("env", parent) : "");
-      var viewer_id = viewerId ? viewerId : (parent ? utils.getQueryStringParameter("viewerId", parent) : "");
-      var schedule_id = parent ? utils.getQueryStringParameter("id", parent) : "";
+      var presentation_type = type ? type : (parent ? getQueryStringParameter("type", parent) : "");
+      var endpoint_type = env ? env : (parent ? getQueryStringParameter("env", parent) : "");
+      var viewer_id = viewerId ? viewerId : (parent ? getQueryStringParameter("viewerId", parent) : "");
+      var schedule_id = parent ? getQueryStringParameter("id", parent) : "";
 
       json.viewer_id = viewer_id;
 
@@ -57,6 +56,25 @@ RiseVision.Common.LoggerUtils = (function() {
     else {
       cb(json);
     }
+  }
+
+  /**
+   * Get the current URI query param
+   */
+  function getQueryParameter(param) {
+    return getQueryStringParameter(param, window.location.href);
+  }
+
+  /**
+   * Get the query parameter from a query string
+   */
+  function getQueryStringParameter(param, url) {
+    param = param.replace(/[[]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + param + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+    if (!results) { return null; }
+    if (!results[2]) { return ""; }
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
   }
 
   // Get suffix for BQ table name.
@@ -155,6 +173,8 @@ RiseVision.Common.LoggerUtils = (function() {
   return {
     "getInsertData": getInsertData,
     "getFileFormat": getFileFormat,
+    "getQueryParameter": getQueryParameter,
+    "getQueryStringParameter": getQueryStringParameter,
     "logEvent": logEvent,
     "logEventToPlayer": logEventToPlayer,
     "setIds": setIds,
