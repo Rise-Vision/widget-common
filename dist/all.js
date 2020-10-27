@@ -2028,6 +2028,9 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
       _refreshPending = false;
       _makeRequest( !cachedData ? 60 : 180 );
     } else {
+      // provide cached data immediately for the response
+      callback( "response", cachedData.data );
+
       if ( _initialGo ) {
         _initialGo = false;
 
@@ -2050,7 +2053,6 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
           if ( diff >= refreshVal ) {
             // more time has gone by than the assigned refresh value, make the request
             _makeRequest( 180 );
-            return;
           } else {
             // start a refresh timer with the remaining refresh time left as the interval
             _clearTimer();
@@ -2061,9 +2063,6 @@ RiseVision.Common.RiseGoogleSheet = function (params, riseData, callback) {
           }
         }
       }
-
-      // provide cached data for the response
-      callback( "response", cachedData.data );
     }
   }
 
