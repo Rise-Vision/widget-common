@@ -1,6 +1,6 @@
 {
   "name": "widget-common",
-  "version": "3.12.2",
+  "version": "3.12.3",
   "description": "Common functionality for Widgets not using Angular JS.",
   "main": "gulpfile.js",
   "scripts": {
