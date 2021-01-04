@@ -1139,11 +1139,44 @@ RiseVision.Common.LoggerUtils = (function() {
     return data;
   }
 
-  function logEvent(table, params) {
+  function logEvent(table, params, endpointLoggingFields) {
     getEventParams(params, function(json) {
       if (json !== null) {
         RiseVision.Common.Logger.log(table, json);
       }
+    });
+
+    logEndpointEvent(params, endpointLoggingFields);
+  }
+
+  function startEndpointHeartbeats(eventApp) {
+    if (!hasViewerEndpointHeartbeats()) { return; }
+
+    var interval = window.top.RiseVision.Viewer.Logger.heartbeatInterval();
+    var heartbeatFn = window.top.RiseVision.Viewer.Logger.recordUptimeHeartbeat;
+    var boundHeartbeatFn = heartbeatFn.bind(null, {
+      eventApp: eventApp,
+      eventAppVersion: version
+    });
+
+    boundHeartbeatFn();
+    setInterval(boundHeartbeatFn, interval);
+  }
+
+  function logEndpointEvent(params, endpointLoggingFields) {
+    if (!endpointLoggingFields || !hasViewerEndpointLogging()) { return; }
+
+    if (!params.event_details || !endpointLoggingFields.severity || !endpointLoggingFields.eventApp) {
+      return console.error ("invalid endpoint logging attempt");
+    }
+
+    window.top.RiseVision.Viewer.Logger.logTemplateEvent({
+      severity: endpointLoggingFields.severity,
+      eventApp: endpointLoggingFields.eventApp,
+      eventAppVersion: version,
+      eventDetails: params.event_details || null,
+      eventErrorCode: endpointLoggingFields.errorCode || null,
+      debugInfo: params.error_details || endpointLoggingFields.debugInfo || null,
     });
   }
 
@@ -1170,6 +1203,40 @@ RiseVision.Common.LoggerUtils = (function() {
     version = value;
   }
 
+  function hasViewerEndpointLogging() {
+    var hasIt = false;
+
+    try {
+      hasIt = window.top &&
+      window.top.RiseVision &&
+      window.top.RiseVision.Viewer &&
+      window.top.RiseVision.Viewer.Logger &&
+      window.top.RiseVision.Viewer.Logger.logTemplateEvent;
+    } catch(err) {
+      hasIt = false;
+      if (console.debug) {console.debug(err);}
+    }
+
+    return hasIt;
+  }
+
+  function hasViewerEndpointHeartbeats() {
+    var hasIt = false;
+
+    try {
+      hasIt = window.top &&
+      window.top.RiseVision &&
+      window.top.RiseVision.Viewer &&
+      window.top.RiseVision.Viewer.Logger &&
+      window.top.RiseVision.Viewer.Logger.recordUptimeHeartbeat;
+    } catch(err) {
+      hasIt = false;
+      if (console.debug) {console.debug(err);}
+    }
+
+    return hasIt;
+  }
+
   return {
     "getInsertData": getInsertData,
     "getFileFormat": getFileFormat,
@@ -1177,6 +1244,8 @@ RiseVision.Common.LoggerUtils = (function() {
     "getQueryStringParameter": getQueryStringParameter,
     "logEvent": logEvent,
     "logEventToPlayer": logEventToPlayer,
+    "startEndpointHeartbeats": startEndpointHeartbeats,
+    "logEndpointEvent": logEndpointEvent,
     "setIds": setIds,
     "setVersion": setVersion
   };
