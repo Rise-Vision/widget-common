@@ -1,10 +1,12 @@
-/* global WebFont */
+/* global WebFont, Promise */
 
 var RiseVision = RiseVision || {};
 
 RiseVision.Common = RiseVision.Common || {};
 
 RiseVision.Common.Utilities = (function() {
+
+  var _serviceWorkerRegistered = new Promise(_checkServiceWorker);
 
   function getFontCssStyle(className, fontObj) {
     var family = "font-family: " + decodeURIComponent(fontObj.font.family).replace(/'/g, "") + "; ";
@@ -298,6 +300,25 @@ RiseVision.Common.Utilities = (function() {
     return url;
   }
 
+  function isServiceWorkerRegistered() {
+    return _serviceWorkerRegistered;
+  }
+
+  function _checkServiceWorker(resolve, reject) {
+    if ( "serviceWorker" in navigator ) {
+      navigator.serviceWorker.getRegistration("https://widgets.risevision.com/")
+        .then( function( registration ) {
+          if ( registration ) {
+            resolve();
+          } else {
+            reject({error: "Not registered"});
+          }
+        });
+    } else {
+      reject({error: "Not supported"});
+    }
+  }
+
   return {
     addProtocol:              addProtocol,
     getQueryParameter:        getQueryParameter,
@@ -313,6 +334,7 @@ RiseVision.Common.Utilities = (function() {
     unescapeHTML:             unescapeHTML,
     hasInternetConnection:    hasInternetConnection,
     isLegacy:                 isLegacy,
+    isServiceWorkerRegistered: isServiceWorkerRegistered,
     getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString,
     getViewerParams:          getViewerParams
   };
