@@ -304,6 +304,18 @@ RiseVision.Common.Utilities = (function() {
     return _serviceWorkerRegistered;
   }
 
+  function isSharedSchedule() {
+    return getQueryParameter("type") === "sharedschedule";
+  }
+
+  function isExtension() {
+    return getQueryParameter("env") === "extension";
+  }
+
+  function useContentSentinel() {
+    return RiseVision.Common.Utilities.isSharedSchedule() || RiseVision.Common.Utilities.isExtension();
+  }
+
   function _checkServiceWorker(resolve, reject) {
     if ( "serviceWorker" in navigator ) {
       navigator.serviceWorker.getRegistration("https://widgets.risevision.com/")
@@ -340,8 +352,11 @@ RiseVision.Common.Utilities = (function() {
     hasInternetConnection:    hasInternetConnection,
     isLegacy:                 isLegacy,
     isServiceWorkerRegistered: isServiceWorkerRegistered,
+    isSharedSchedule:         isSharedSchedule,
+    isExtension:              isExtension,
     getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString,
     getViewerParams:          getViewerParams,
+    useContentSentinel:       useContentSentinel,
     // -- test methods --
     _reset:                   _reset
   };
