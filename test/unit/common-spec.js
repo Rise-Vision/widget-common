@@ -388,3 +388,32 @@ describe("addProtocol", function () {
 
 });
 
+describe("isServiceWorkerRegistered", function () {
+  var utils = RiseVision.Common.Utilities;
+
+  it("should return error `Not supported`", function (done) {
+
+    utils.isServiceWorkerRegistered()
+    .catch(function(result) {
+      expect(result.error).to.equal("Not supported");
+      done();
+    });
+  });
+
+  it("should fulfill promise", function (done) {
+
+    Object.defineProperty( navigator, "serviceWorker", {
+      value: {
+        getRegistration: function() {
+          return Promise.resolve({});
+        }
+      }
+    });
+
+    utils._reset();
+
+    utils.isServiceWorkerRegistered()
+    .then(done);
+  });
+
+});

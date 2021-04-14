@@ -319,6 +319,11 @@ RiseVision.Common.Utilities = (function() {
     }
   }
 
+  //for unit tests
+  function _reset() {
+    _serviceWorkerRegistered = new Promise(_checkServiceWorker);
+  }
+
   return {
     addProtocol:              addProtocol,
     getQueryParameter:        getQueryParameter,
@@ -336,6 +341,8 @@ RiseVision.Common.Utilities = (function() {
     isLegacy:                 isLegacy,
     isServiceWorkerRegistered: isServiceWorkerRegistered,
     getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString,
-    getViewerParams:          getViewerParams
+    getViewerParams:          getViewerParams,
+    // -- test methods --
+    _reset:                   _reset
   };
 })();
