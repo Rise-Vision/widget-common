@@ -388,3 +388,70 @@ describe("addProtocol", function () {
 
 });
 
+describe("isServiceWorkerRegistered", function () {
+  var utils = RiseVision.Common.Utilities;
+
+  it("should return error `Not supported`", function (done) {
+
+    utils.isServiceWorkerRegistered()
+    .catch(function(result) {
+      expect(result.error).to.equal("Not supported");
+      done();
+    });
+  });
+
+  it("should fulfill promise", function (done) {
+
+    Object.defineProperty( navigator, "serviceWorker", {
+      value: {
+        getRegistration: function() {
+          return Promise.resolve({});
+        }
+      }
+    });
+
+    utils._reset();
+
+    utils.isServiceWorkerRegistered()
+    .then(done);
+  });
+
+});
+
+describe("useContentSentinel", function () {
+  var utils = RiseVision.Common.Utilities;
+  var _sandbox;
+
+  beforeEach(function () {
+    _sandbox = sinon.sandbox.create();
+  });
+
+  afterEach(function () {
+    _sandbox.restore();
+  });
+
+  it("should return true if Shared Schedule", function () {
+    _sandbox.stub(utils, "isSharedSchedule").returns( true );
+    _sandbox.stub(utils, "isExtension").returns( false );
+
+    expect(utils.useContentSentinel()).to.be.true;
+
+  });
+
+  it("should return true if Extension", function () {
+    _sandbox.stub(utils, "isSharedSchedule").returns( false );
+    _sandbox.stub(utils, "isExtension").returns( true );
+
+    expect(utils.useContentSentinel()).to.be.true;
+
+  });
+
+  it("should return true if not Shared Schedule or Extension", function () {
+    _sandbox.stub(utils, "isSharedSchedule").returns( false );
+    _sandbox.stub(utils, "isExtension").returns( false );
+
+    expect(utils.useContentSentinel()).to.be.false;
+
+  });
+
+});
