@@ -139,7 +139,7 @@ describe("RiseVision.Common.LoggerUtils", function() {
     });
   });
 
-  describe("setIds", function() {
+  xdescribe("setIds", function() {
     var logSpy,
       tableName = "video_events";
 
@@ -168,7 +168,7 @@ describe("RiseVision.Common.LoggerUtils", function() {
     });
   });
 
-  describe("setVersion", function () {
+  xdescribe("setVersion", function () {
     var logSpy,
       tableName = "video_events";
 
@@ -199,7 +199,7 @@ describe("RiseVision.Common.LoggerUtils", function() {
     });
   });
 
-  describe("logEvent", function() {
+  xdescribe("logEvent", function() {
     var logSpy,
       tableName = "video_events",
       defined = {

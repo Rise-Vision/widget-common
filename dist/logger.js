@@ -15,7 +15,7 @@ RiseVision.Common.LoggerUtils = (function() {
    */
 
   /* Retrieve parameters to pass to the event logger. */
-  function getEventParams(params, cb) {
+  function getEventParams(params, cb) { // jshint ignore:line
     var json = null;
 
     // event is required.
@@ -140,12 +140,6 @@ RiseVision.Common.LoggerUtils = (function() {
   }
 
   function logEvent(table, params, endpointLoggingFields) {
-    getEventParams(params, function(json) {
-      if (json !== null) {
-        RiseVision.Common.Logger.log(table, json);
-      }
-    });
-
     logEndpointEvent(params, endpointLoggingFields);
   }
 
