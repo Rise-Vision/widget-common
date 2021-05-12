@@ -15,7 +15,7 @@ RiseVision.Common.LoggerUtils = (function() {
    */
 
   /* Retrieve parameters to pass to the event logger. */
-  function getEventParams(params, cb) {
+  function getEventParams(params, cb) { // jshint ignore:line
     var json = null;
 
     // event is required.
