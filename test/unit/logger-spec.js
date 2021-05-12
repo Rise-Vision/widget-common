@@ -139,6 +139,171 @@ describe("RiseVision.Common.LoggerUtils", function() {
     });
   });
 
+  xdescribe("setIds", function() {
+    var logSpy,
+      tableName = "video_events";
+
+    beforeEach(function () {
+      logSpy = sinon.spy(RiseVision.Common.Logger, "log");
+    });
+
+    afterEach(function() {
+      RiseVision.Common.Logger.log.restore();
+    });
+
+    it("should set the company and display ids to be used in the params", function () {
+      utils.setIds("abc123", "def456");
+      utils.logEvent(tableName, {
+        "event": "load",
+        "event_details": "Widget loaded"
+      });
+
+      expect(logSpy).to.have.been.calledWith(tableName, {
+        "event": "load",
+        "event_details": "Widget loaded",
+        "company_id": "abc123",
+        "display_id": "def456",
+        "viewer_id": ""
+      });
+    });
+  });
+
+  xdescribe("setVersion", function () {
+    var logSpy,
+      tableName = "video_events";
+
+    beforeEach(function () {
+      logSpy = sinon.spy(RiseVision.Common.Logger, "log");
+    });
+
+    afterEach(function() {
+      RiseVision.Common.Logger.log.restore();
+    });
+
+    it("should set the version to be used in the params", function () {
+      utils.setIds("abc123", "def456");
+      utils.setVersion("0.0.0");
+      utils.logEvent(tableName, {
+        "event": "load",
+        "event_details": "Widget loaded"
+      });
+
+      expect(logSpy).to.have.been.calledWith(tableName, {
+        "event": "load",
+        "event_details": "Widget loaded",
+        "company_id": "abc123",
+        "display_id": "def456",
+        "version": "0.0.0",
+        "viewer_id": ""
+      });
+    });
+  });
+
+  xdescribe("logEvent", function() {
+    var logSpy,
+      tableName = "video_events",
+      defined = {
+        "company_id": "abc123",
+        "display_id": "def456",
+        "version": "0.0.0"
+      };
+
+    beforeEach(function () {
+      logSpy = sinon.spy(RiseVision.Common.Logger, "log");
+    });
+
+    afterEach(function() {
+      RiseVision.Common.Logger.log.restore();
+    });
+
+    it("should call spy with correct parameters", function() {
+      var test = {
+        "event": "error",
+        "event_details": "storage error",
+        "file_url": "http://www.test.com/file.webm"
+      };
+
+      RiseVision.Common.LoggerUtils.logEvent(tableName, test);
+
+      expect(logSpy).to.have.been.calledWith(tableName, {
+        "event": test.event,
+        "event_details": test.event_details,
+        "file_url": test.file_url,
+        "file_format": "webm",
+        "display_id": defined.display_id,
+        "company_id": defined.company_id,
+        "version": defined.version,
+        "viewer_id": ""
+      });
+    });
+
+    it("should call spy with correct parameters when the event_details parameter is not set", function() {
+      var test = {
+        "event": "error",
+        "file_url": "http://www.test.com/file.webm"
+      };
+
+      RiseVision.Common.LoggerUtils.logEvent(tableName, test);
+
+      expect(logSpy).to.have.been.calledWith(tableName, {
+        "event": test.event,
+        "file_url": test.file_url,
+        "file_format": "webm",
+        "display_id": defined.display_id,
+        "company_id": defined.company_id,
+        "version": defined.version,
+        "viewer_id": ""
+      });
+    });
+
+    it("should call spy with correct parameters when the file_url parameter is not set", function() {
+      var test = {
+        "event": "error",
+        "event_details": "storage error"
+      };
+
+      RiseVision.Common.LoggerUtils.logEvent(tableName, test);
+
+      expect(logSpy).to.have.been.calledWith(tableName, {
+        "event": test.event,
+        "event_details": test.event_details,
+        "display_id": defined.display_id,
+        "company_id": defined.company_id,
+        "version": defined.version,
+        "viewer_id": ""
+      });
+    });
+
+    it("should call spy with correct parameters when the file_format is included", function() {
+      var test = {
+        "event": "error",
+        "event_details": "storage error",
+        "file_url": "test-bucket/test-folder/",
+        "file_format": "images"
+      };
+
+      RiseVision.Common.LoggerUtils.logEvent(tableName, test);
+
+      expect(logSpy).to.have.been.calledWith(tableName, {
+        "event": test.event,
+        "event_details": test.event_details,
+        "file_url": test.file_url,
+        "file_format": test.file_format,
+        "display_id": defined.display_id,
+        "company_id": defined.company_id,
+        "version": defined.version,
+        "viewer_id": ""
+      });
+    });
+
+    it("should not call spy if the event parameter is not set", function() {
+      RiseVision.Common.LoggerUtils.logEvent(tableName, { "event_details": "storage error" });
+
+      expect(logSpy).not.to.have.been.called;
+    });
+
+  });
+
   describe("logEventToPlayer", function() {
     var tableName = "video_events";
 
