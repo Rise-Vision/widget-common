@@ -140,12 +140,6 @@ RiseVision.Common.LoggerUtils = (function() {
   }
 
   function logEvent(table, params, endpointLoggingFields) {
-    getEventParams(params, function(json) {
-      if (json !== null) {
-        RiseVision.Common.Logger.log(table, json);
-      }
-    });
-
     logEndpointEvent(params, endpointLoggingFields);
   }
 
