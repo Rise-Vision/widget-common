@@ -312,8 +312,12 @@ RiseVision.Common.Utilities = (function() {
     return getQueryParameter("env") === "extension";
   }
 
+  function isWebPlayer() {
+    return getQueryParameter("type") === "webplayer";
+  }
+
   function useContentSentinel() {
-    return RiseVision.Common.Utilities.isSharedSchedule() || RiseVision.Common.Utilities.isExtension();
+    return RiseVision.Common.Utilities.isSharedSchedule() || RiseVision.Common.Utilities.isExtension() || RiseVision.Common.Utilities.isWebPlayer();
   }
 
   function _checkServiceWorker(resolve, reject) {
@@ -354,6 +358,7 @@ RiseVision.Common.Utilities = (function() {
     isServiceWorkerRegistered: isServiceWorkerRegistered,
     isSharedSchedule:         isSharedSchedule,
     isExtension:              isExtension,
+    isWebPlayer:              isWebPlayer,
     getDateObjectFromPlayerVersionString: getDateObjectFromPlayerVersionString,
     getViewerParams:          getViewerParams,
     useContentSentinel:       useContentSentinel,
