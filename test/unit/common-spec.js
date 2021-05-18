@@ -446,9 +446,19 @@ describe("useContentSentinel", function () {
 
   });
 
-  it("should return true if not Shared Schedule or Extension", function () {
+  it("should return true if Web Player", function () {
     _sandbox.stub(utils, "isSharedSchedule").returns( false );
     _sandbox.stub(utils, "isExtension").returns( false );
+    _sandbox.stub(utils, "isWebPlayer").returns( true );
+
+    expect(utils.useContentSentinel()).to.be.true;
+
+  });
+
+  it("should return false if not Shared Schedule or Extension", function () {
+    _sandbox.stub(utils, "isSharedSchedule").returns( false );
+    _sandbox.stub(utils, "isExtension").returns( false );
+    _sandbox.stub(utils, "isWebPlayer").returns( false );
 
     expect(utils.useContentSentinel()).to.be.false;
 
